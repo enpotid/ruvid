@@ -1,15 +1,17 @@
+use crate::prelude::*;
+
 use glutin::{ContextBuilder, event_loop::EventLoop};
-use std::ffi::CString;
-use std::io::Write;
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
-use std::ptr;
 use std::time::Instant;
 
 pub struct Video {
     pub path: PathBuf,
     pub resolution: Resolution,
     pub fps: u32,
+    shapes: HashMap<usize, Box<dyn Shape>>,
+    next_id: usize,
 }
 
 pub struct Resolution {
@@ -19,13 +21,28 @@ pub struct Resolution {
 
 impl Video {
     pub fn new(path: impl Into<PathBuf>, resolution: (u32, u32), fps: u32) -> Self {
-        Video {
+        Self {
             path: path.into(),
             resolution: Resolution {
                 width: resolution.0,
                 height: resolution.1,
             },
             fps,
+            shapes: HashMap::new(),
+            next_id: 0,
+        }
+    }
+
+    pub fn add_shape(&mut self, shape: Box<dyn Shape>) -> usize {
+        let id = self.next_id;
+        self.shapes.insert(id, shape);
+        self.next_id += 1;
+        id
+    }
+
+    pub fn edit_shape(&mut self, id: usize, function: &impl Fn(Box<dyn Shape>) -> Box<dyn Shape>) {
+        if let Some(shape) = self.shapes.remove(&id) {
+            self.shapes.insert(id, function(shape));
         }
     }
 
@@ -37,7 +54,7 @@ impl Video {
         let headless_context = ContextBuilder::new()
             .build_headless(&el, glutin::dpi::PhysicalSize::new(width, height))
             .unwrap();
-        let headless_context = unsafe { headless_context.make_current().unwrap() };
+        let _headless_context = unsafe { headless_context.make_current().unwrap() };
 
         let mut ffmpeg = Command::new("ffmpeg")
             .args(&[
@@ -64,7 +81,7 @@ impl Video {
             .spawn()
             .unwrap();
 
-        let ffmpeg_stdin = ffmpeg.stdin.as_mut().unwrap();
+        let _ffmpeg_stdin = ffmpeg.stdin.as_mut().unwrap();
 
         // TODO
 
