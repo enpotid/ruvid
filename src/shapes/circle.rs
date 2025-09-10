@@ -1,18 +1,13 @@
 use crate::prelude::*;
 
 pub struct Circle {
-    pub x: f32,
-    pub y: f32,
+    pub position: Vec3,
     pub radius: f32,
 }
 
 impl Circle {
-    pub fn new() -> Box<Self> {
-        Box::new(Self {
-            x: 0.0,
-            y: 0.0,
-            radius: 1.0,
-        })
+    pub fn new(position: Vec3, radius: f32) -> Box<Self> {
+        Box::new(Self { position, radius })
     }
 }
 
