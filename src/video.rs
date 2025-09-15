@@ -10,6 +10,7 @@ pub struct Video {
     pub path: PathBuf,
     pub resolution: Resolution,
     pub fps: u32,
+    draw_commands: DrawCommands,
     shapes: HashMap<usize, Box<dyn Shape>>,
     next_id: usize,
 }
@@ -28,6 +29,7 @@ impl Video {
                 height: resolution.1,
             },
             fps,
+            draw_commands: DrawCommands::new(),
             shapes: HashMap::new(),
             next_id: 0,
         }
@@ -44,6 +46,18 @@ impl Video {
         if let Some(shape) = self.shapes.remove(&id) {
             self.shapes.insert(id, function(shape));
         }
+    }
+
+    pub fn wait(&mut self, second: f32) {
+        for (_, shape) in &self.shapes {
+            self.draw_commands
+                .commands
+                .append(&mut shape.draw().commands)
+        }
+
+        self.draw_commands
+            .commands
+            .push(DrawCommand::Wait { second });
     }
 
     pub fn generate(self) {
@@ -80,6 +94,8 @@ impl Video {
             .stderr(Stdio::null())
             .spawn()
             .unwrap();
+
+        println!("{:?}", self.draw_commands);
 
         let _ffmpeg_stdin = ffmpeg.stdin.as_mut().unwrap();
 

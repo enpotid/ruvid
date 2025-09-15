@@ -16,4 +16,13 @@ impl Shape for Circle {
         self.radius *= factor;
         self
     }
+
+    fn draw(&self) -> DrawCommands {
+        DrawCommands {
+            commands: vec![DrawCommand::Cricle {
+                p: self.position,
+                radius: self.radius,
+            }],
+        }
+    }
 }

@@ -18,4 +18,13 @@ impl Shape for Line {
         self.end = factor * (self.end - midpoint) + midpoint;
         self
     }
+
+    fn draw(&self) -> DrawCommands {
+        DrawCommands {
+            commands: vec![DrawCommand::Line {
+                p1: self.start,
+                p2: self.end,
+            }],
+        }
+    }
 }
