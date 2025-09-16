@@ -1,6 +1,6 @@
+use crate::draw::render::render;
 use crate::prelude::*;
 
-use glutin::{ContextBuilder, event_loop::EventLoop};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
@@ -63,13 +63,6 @@ impl Video {
     pub fn generate(self) {
         let start = Instant::now();
 
-        let (width, height) = (self.resolution.width, self.resolution.height);
-        let el = EventLoop::new();
-        let headless_context = ContextBuilder::new()
-            .build_headless(&el, glutin::dpi::PhysicalSize::new(width, height))
-            .unwrap();
-        let _headless_context = unsafe { headless_context.make_current().unwrap() };
-
         let mut ffmpeg = Command::new("ffmpeg")
             .args(&[
                 "-y",
@@ -78,7 +71,7 @@ impl Video {
                 "-pix_fmt",
                 "rgba",
                 "-s",
-                &format!("{width}x{height}"),
+                &format!("{}x{}", self.resolution.width, self.resolution.height),
                 "-r",
                 &format!("{}", self.fps),
                 "-i",
@@ -95,11 +88,15 @@ impl Video {
             .spawn()
             .unwrap();
 
-        println!("{:?}", self.draw_commands);
+        let ffmpeg_stdin = ffmpeg.stdin.as_mut().unwrap();
 
-        let _ffmpeg_stdin = ffmpeg.stdin.as_mut().unwrap();
-
-        // TODO
+        render(
+            self.fps,
+            self.resolution.width,
+            self.resolution.height,
+            self.draw_commands,
+            ffmpeg_stdin,
+        );
 
         drop(ffmpeg.stdin.take().unwrap());
         ffmpeg.wait().unwrap();

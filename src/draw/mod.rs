@@ -1,5 +1,7 @@
 use crate::prelude::*;
 
+pub mod render;
+
 #[derive(Debug)]
 pub struct DrawCommands {
     pub commands: Vec<DrawCommand>,
